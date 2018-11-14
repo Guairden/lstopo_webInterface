@@ -3,7 +3,6 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="css/style.css"/>
     <link rel="stylesheet" type="text/css" href="css/draw.css"/>
-    <link rel="stylesheet" type="text/css" href="css/popup.css"/>
     <script type="text/javascript" src="js/xml2json.js"></script>
     <script type="text/javascript" src="js/Node.js"></script>
     <script type="text/javascript" src="js/Cache.js"></script>
@@ -24,7 +23,6 @@
   </head>
  
   <body>
-     
     <h3>Machine</h3>
       
     <script>
@@ -39,26 +37,6 @@
         let nodes = [];
         let packages = []
         let currentDepth = {depth: 0, logical_index: 0, sibling_rank: 0, parent, package: 0};
-
-        function toggleHide(label){
-          const elements = document.getElementsByClassName(label.value);
-            for (e of elements){
-              e.classList.toggle('hide');
-            }
-            if(label.value === "OSDev"){
-              const FalseElements = document.getElementsByClassName("FalseOSDev");
-              for (e of FalseElements){
-                e.classList.toggle('hide');
-              }
-              reloadSvg();
-            }else if(label.value === "PCIDev"){
-              const bridges = document.getElementsByClassName("Bridge");
-              for (e of bridges){
-                e.classList.toggle('hide');
-              }
-              reloadSvg();
-            }
-        }
         
 
         start();
@@ -307,50 +285,27 @@
 
           nodes.forEach(node => {
             if(node.package === currentDepth.package){
-              if(node.depth === depth){
+              
+              if(node.depth === depth || node.depth < depth){
                 depth = node.depth
-              }else if (node.depth < depth){
-                div = document.getElementById(depth - 1)
+                node.displayDiv(div)
               }else{
                 depth++
                 div = document.createElement('div')
                 div.id = depth
+                node.displayDiv(div)
               }
-              node.displayDiv(div)
               packages[currentDepth.package].appendChild(div)
             }
             })
           }
         
-        </script>
-    </body>
-    <footer>
-        <div class="navbar">
-            <input id='hideLabel'/>
-            <button id="hideButton">Ok</button> <br>
-            Enter the name of an element and press "Ok" to hide it.
-      </div>
-      <script>
-        const button = document.getElementById('hideButton');
-        button.addEventListener('click',function(){
-          const label = document.getElementById('hideLabel');
-          if(label.value == "L1Cache" ||
-          label.value == "L2Cache" ||
-          label.value == "L3Cache" ||
-          label.value == "Core" ||
-          label.value == "PCIDev" ||
-          label.value == "OSDev" ||
-          label.value == "PU"){
-            toggleHide(label);
-          }
-        })
-      </script> 
-    </footer>
         
         
         
         
-          
+        
+        
         
         
         
