@@ -1,0 +1,341 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <link rel="stylesheet" type="text/css" href="css/draw.css"/>
+    <script type="text/javascript" src="js/xml2json.js"></script>
+    <script type="text/javascript" src="js/Node.js"></script>
+    <script type="text/javascript" src="js/Cache.js"></script>
+    <script type="text/javascript" src="js/L3Cache.js"></script>
+    <script type="text/javascript" src="js/L2Cache.js"></script>
+    <script type="text/javascript" src="js/L1Cache.js"></script>
+    <script type="text/javascript" src="js/Core.js"></script>
+    <script type="text/javascript" src="js/PU.js"></script>
+    <script type="text/javascript" src="js/Package.js"></script>
+    <script type="text/javascript" src="js/NUMANode.js"></script>
+    <script type="text/javascript" src="js/PCIDev.js"></script>
+    <script type="text/javascript" src="js/Bridge.js"></script>
+    <script type="text/javascript" src="js/OSDev.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script type="text/javascript" src="js/svgDraw.js"></script>
+    <script type="text/javascript" src="js/svg.js"></script>
+    <title>lstopo</title>
+  </head>
+ 
+  <body>
+    <h3>Machine</h3>
+      
+    <script>
+        //open XML file and convert to JSON
+        var Connect = new XMLHttpRequest();
+        Connect.open("GET", "xml/foo.xml", false);
+        Connect.send(null);
+        var TheDocument = Connect.responseXML;
+        let json = xmlToJson(TheDocument);
+
+        //ListOfNodes
+        let nodes = [];
+        let packages = []
+        let currentDepth = {depth: 0, logical_index: 0, sibling_rank: 0, parent, package: 0};
+        
+
+        start();
+        
+        function start(){
+          let l = json.topology[1].object.object.length;
+          let i = 0;
+          
+          let machine = json.topology[1].object.object;
+          if(machine[0]["@attributes"].type == "NUMANode"){
+            new NUMANode(machine[0]["@attributes"], 0);
+            i++;
+          }
+          for( i; i < l; i++){
+            if(machine[i]["@attributes"].type == "Package"){
+              createPackage();
+              createTree(machine[i].object,currentDepth);
+              displayElements()
+              currentDepth = {depth: 0, logical_index: 0, sibling_rank: 0, parent, package: currentDepth.package + 1};
+            }
+            if(machine[i]["@attributes"].type == "Bridge"){
+
+              const svgContainer = document.createElement('div');
+              svgContainer.id = "svgContainer";
+
+              var svg = SVG.create('svg');
+              svg.id = "svg1";
+              svgContainer.appendChild(svg);
+              const parent = document.createElement('div');
+              document.body.appendChild(svgContainer);
+              document.body.appendChild(parent)
+              createBridgeTree(machine[i],parent);
+              console.log(nodes)
+            }
+          }
+        }
+
+        //create Bridge objects using "createElement", "createElements" and "link"
+        function createBridgeTree(element, parent, prevDiv = null){
+          let div = null;
+          let br = null;
+          let bridge = null;
+
+          if(prevDiv === null){
+            div = document.createElement('div');
+            br = document.createElement('br');
+            bridge = createBridgeElement(element,parent);
+            document.body.appendChild(div);
+            document.body.appendChild(br);
+          }else{
+            div = prevDiv;
+            bridge = createBridgeElement(element,parent);
+          }
+
+          if(Array.isArray(element.object)){
+            let bridgeCount = 0;
+            let currentDiv = null;
+            let PCIDev;
+            element.object.forEach(e => {
+              if(e["@attributes"].type != "Bridge"){
+                PCIDev = createBridgeElement(e,div);
+                link(bridge.getDiv(),PCIDev.getDiv());
+              }
+              else{
+                if(bridgeCount === 0){
+                  bridgeCount++;
+                  currentDiv = createBridgeTree(e,div);
+                }else{
+                  createBridgeTree(e,div,currentDiv)
+                }  
+              }       
+            })
+          }
+          else{
+            if(element.object["@attributes"].type != "Bridge"){
+              PCIDev = createBridgeElement(element.object,div);
+              link(bridge.getDiv(),PCIDev.getDiv());
+            }else
+              createBridgeTree(e.object,div);
+          }
+          return div;
+        }
+        
+        //create Bridge graphical effet via svg
+        function link(firstElem,secondElem){
+
+          const svg = document.getElementById('svg1');
+          const path = SVG.create('path');
+          path.setAttribute("d","M0 0");
+          path.setAttribute("stroke","black");
+          path.setAttribute("fill","none");
+          path.setAttribute("stroke-width","8px");
+          path.id = 'coucu'
+          svg.appendChild(path);
+          connect($(path),$(firstElem),$(secondElem));
+        }
+        
+        //parse xml to js objects using "createElements" and "createElements"
+        function createTree(element,currentDepth){
+          if(element !=null && element != undefined){
+            //is the target an array
+            if(Array.isArray(element)){
+              createElements(element,currentDepth);
+              createTree(element.object,currentDepth);
+            }else{
+              createElement(element,currentDepth);
+              createTree(element.object,currentDepth);
+            } 
+          }else{
+            return;
+          }
+        }
+
+        //create js object from xml object
+        function createElement(element,currentDepth){
+          let nodeInfo = {depth: currentDepth.depth,
+                    logical_index: currentDepth.logical_index,
+                    sibling_rank: currentDepth.sibling_rank,
+                    arity:(Array.isArray(element.object)?element.object.length:1),
+                    path: element,
+                    parent: currentDepth.parent,
+                    package: currentDepth.package}
+          let type = element["@attributes"].type;
+          let node;
+          switch(type){
+
+            case "NUMANode":
+              node = new NUMANode(nodeInfo)
+              nodes.push(node);
+              break;
+
+            case "Cache":
+              node = new Cache(nodeInfo)
+              nodes.push(node);
+              break;
+
+            case "L3Cache" :
+              node = new L3Cache(nodeInfo);
+              nodes.push(node);
+              break;
+
+            case "L2Cache":
+              node = new L2Cache(nodeInfo);
+              nodes.push(node);
+              break;
+
+            case "L1Cache" :
+            case "L1iCache" :
+              node = new L1Cache(nodeInfo);
+              nodes.push(node);
+              break;
+
+            case "Core":
+              node = new Core(nodeInfo);
+              nodes.push(node);
+              break;
+
+            case "PU":
+              node = new PU(nodeInfo);
+              nodes.push(node);
+              break;
+
+            case "Bridge" :
+              let bridge = new Bridge(element,parent);
+              return bridge;
+
+            case "PCIDev" :
+              const PCIDev = new Pcidev(element,parent);
+              if(Array.isArray(element.object)){
+                element.object.forEach(e =>{
+                  new OSDev(e,PCIDev.getDiv());
+                })
+              }
+              else if(element.object !== null && element.object !== undefined)
+                new OSDev(element.object,PCIDev.getDiv());
+              else{
+                new FalseOSDev(PCIDev.getDiv());
+              }
+              return PCIDev;
+          }
+          currentDepth.logical_index++
+        }
+
+        function createBridgeElement(element, parent){
+          let type = element["@attributes"].type;
+          switch(type){
+            case "Bridge" :
+              let bridge = new Bridge(element,parent);
+              return bridge;
+
+            case "PCIDev" :
+              const PCIDev = new Pcidev(element,parent);
+              if(Array.isArray(element.object)){
+                element.object.forEach(e =>{
+                  new OSDev(e,PCIDev.getDiv());
+                })
+              }
+              else if(element.object !== null && element.object !== undefined)
+                new OSDev(element.object,PCIDev.getDiv());
+              else{
+                new FalseOSDev(PCIDev.getDiv());
+              }
+              return PCIDev;
+            }
+        }
+        
+        //This function take an array of elements and continue creating the sons elements until there is no sons,grandsons.. left to in the xml
+        function createElements(elements,currentDepth, onlySibling = false){
+          let tempDepth = Object.assign({}, currentDepth)
+          tempDepth.depth++
+          tempDepth.logical_index = 0
+          tempDepth.sibling_rank = 0
+          let sonElements = []
+          tempDepth.parent = [currentDepth.depth, currentDepth.logical_index - 1, 0]
+          elements.forEach(e => {
+            tempDepth.sibling_rank = elements.indexOf(e)
+            if(onlySibling !== false){
+              tempDepth.parent[2] = 1
+              tempDepth.sibling_rank = 0
+            }
+            //keep each target's children child in memory if they are not array
+            if(e.object !=null && e.object != undefined && !Array.isArray(e.object)){
+              sonElements.push(e.object);
+            }
+
+            //create target
+            createElement(e,tempDepth);
+
+            //If target's children child is an array reapply function on it
+            if(Array.isArray(e.object)){
+              createElements(e.object,tempDepth);
+            }
+          })
+          
+          //apply function on target's children child kept in memory
+          if(sonElements.length > 0){
+            createElements(sonElements,tempDepth, true)
+          } 
+        }
+
+        function displayElements(){
+          console.log(nodes)
+          let depth = 0;
+          let div = document.createElement('div')
+          div.id = depth
+
+          nodes.forEach(node => {
+            if(node.package === currentDepth.package){
+              
+              if(node.depth === depth || node.depth < depth){
+                depth = node.depth
+                node.displayDiv(div)
+              }else{
+                depth++
+                div = document.createElement('div')
+                div.id = depth
+                node.displayDiv(div)
+              }
+              packages[currentDepth.package].appendChild(div)
+            }
+            })
+          }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </script>
+  </body>
+ 
+</html>

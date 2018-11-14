@@ -1,0 +1,111 @@
+body{
+    text-align: center;
+    background-color: #b2b7b6;
+    font-family: 'Courier New', Courier, monospace;
+}
+.test{
+    width: 30%;
+}
+div{
+    margin-bottom: 2px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+.Bridge{
+    background-color:#c4dadd;
+    color:#c4dadd;
+    min-width: 50px;
+    min-height: 30px;
+    display:inline-block;
+    margin: 20px;
+    border-radius: 25px;
+}
+
+.NUMANode{
+    background-color:#c4dadd;
+    width: 95%;
+    max-height: 10%;
+    display: inline-block;
+    border-radius: 25px;
+}
+
+.package{
+    background-color: #c4dadd;
+    margin-right: 0px;
+    width: 95%;
+    max-height:80%;
+    display: inline-block;
+    border-radius: 25px;
+}
+
+.L3Cache,.Cache{
+    background-color: #368bbb;
+    width: 95%;
+    max-height: 10%;
+    display: inline-block;
+    border-radius: 25px;
+}
+
+.L2Cache{
+    background-color:#63b3dd;
+    width: 15%;
+    max-height: 10%;
+    display: inline-block;
+    margin : 10px;
+    border-radius: 25px;
+}
+
+.L1Cache,.L1iCache{
+    background-color:#63b3dd;
+    width: 15%;
+    max-height: 10%;
+    display: inline-block;
+    margin : 10px;
+    border-radius: 25px;
+}
+
+.Core{
+    background-color:#97c3db;
+    width: 15%;
+    min-height: 30%;
+    display: inline-block;
+    margin : 10px;
+    border-radius: 25px;
+}
+
+.PU{
+    background-color: #c4dadd;
+    width: 50px;
+    min-height: 50px;
+    display: inline-block;
+    margin : 10px;
+    border-radius: 25px;
+}
+
+.PCIDev{
+    background-color:#97c3db;
+    width: 15%;
+    min-height: 30%;
+    display: inline-block;
+    margin : 10px;
+}
+
+.OSDev{
+    background-color: #c4dadd;
+    width: 50px;
+    min-height: 50px;
+    display: inline-block;
+    margin : 10px;
+    border-radius: 25px;
+}
+
+.FalseOSDev{
+    background-color: #97c3db;
+    color : #97c3db;
+    width: 50px;
+    min-height: 50px;
+    display: inline-block;
+    margin : 10px;
+    border-radius: 25px;
+}
