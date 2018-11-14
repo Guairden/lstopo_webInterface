@@ -109,3 +109,7 @@ div{
     margin : 10px;
     border-radius: 25px;
 }
+
+.hide{
+    display: none;
+}
