@@ -39,7 +39,7 @@ div{
     border-radius: 25px;
 }
 
-.L3Cache,.Cache{
+.L3{
     background-color: #368bbb;
     width: 95%;
     max-height: 10%;
@@ -47,7 +47,7 @@ div{
     border-radius: 25px;
 }
 
-.L2Cache{
+.L2{
     background-color:#63b3dd;
     width: 15%;
     max-height: 10%;
@@ -56,7 +56,7 @@ div{
     border-radius: 25px;
 }
 
-.L1Cache,.L1iCache{
+.L1{
     background-color:#63b3dd;
     width: 15%;
     max-height: 10%;
@@ -74,7 +74,7 @@ div{
     border-radius: 25px;
 }
 
-.PU{
+.Pu{
     background-color: #c4dadd;
     width: 50px;
     min-height: 50px;

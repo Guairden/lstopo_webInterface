@@ -1,0 +1,273 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <link rel="stylesheet" type="text/css" href="css/draw.css"/>
+    <link rel="stylesheet" type="text/css" href="css/popup.css"/>
+    <script type="text/javascript" src="js/xml2json.js"></script>
+    <script type="text/javascript" src="js/L3Cache.js"></script>
+    <script type="text/javascript" src="js/L2Cache.js"></script>
+    <script type="text/javascript" src="js/L1Cache.js"></script>
+    <script type="text/javascript" src="js/Core.js"></script>
+    <script type="text/javascript" src="js/PU.js"></script>
+    <script type="text/javascript" src="js/Package.js"></script>
+    <script type="text/javascript" src="js/NUMANode.js"></script>
+    <script type="text/javascript" src="js/PCIDev.js"></script>
+    <script type="text/javascript" src="js/Bridge.js"></script>
+    <script type="text/javascript" src="js/OSDev.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script type="text/javascript" src="js/svgDraw.js"></script>
+    <script type="text/javascript" src="js/svg.js"></script>
+    <title>lstopo</title>
+  </head>
+ 
+  <body>
+    <h3>Machine</h3>
+      
+    <script>
+
+        //open XML file and convert to JSON
+        var Connect = new XMLHttpRequest();
+        Connect.open("GET", "foo.xml", false);
+        Connect.send(null);
+        var TheDocument = Connect.responseXML;
+        let json = xmlToJson(TheDocument);
+        start();
+
+
+
+        
+        function start(){
+          let l = json.topology[1].object.object.length;
+          let i = 0;
+          let package;
+          let machine = json.topology[1].object.object;
+          if(machine[0]["@attributes"].type == "NUMANode"){
+            new NUMANode(machine[0]["@attributes"],document.body);
+            i++;
+          }
+          for( i; i < l; i++){
+            if(machine[i]["@attributes"].type == "Package"){
+              package = createPackage();
+              createTree(machine[i].object,package);
+            }
+            if(machine[i]["@attributes"].type == "Bridge"){
+
+              const svgContainer = document.createElement('div');
+              svgContainer.id = "svgContainer";
+
+              var svg = SVG.create('svg');
+              svg.id = "svg1";
+              svgContainer.appendChild(svg);
+              const parent = document.createElement('div');
+              document.body.appendChild(svgContainer);
+              document.body.appendChild(parent)
+              createBridgeTree(machine[i],parent);
+            }
+          }
+        }
+
+        
+        function createBridgeTree(element, parent, prevDiv = null){
+          let div = null;
+          let br = null;
+          let bridge = null;
+
+          if(prevDiv === null){
+            div = document.createElement('div');
+            br = document.createElement('br');
+            bridge = createElement(element,parent);
+            document.body.appendChild(div);
+            document.body.appendChild(br);
+          }else{
+            div = prevDiv;
+            bridge = createElement(element,parent);
+          }
+
+          if(Array.isArray(element.object)){
+            let bridgeCount = 0;
+            let actualDiv = null;
+            let PCIDev;
+            element.object.forEach(e => {
+              if(e["@attributes"].type != "Bridge"){
+                PCIDev = createElement(e,div);
+                link(bridge.getDiv(),PCIDev.getDiv());
+              }
+              else{
+                if(bridgeCount === 0){
+                  bridgeCount++;
+                  actualDiv = createBridgeTree(e,div);
+                }else{
+                  createBridgeTree(e,div,actualDiv)
+                }  
+              }       
+            })
+          }
+          else{
+            if(element.object["@attributes"].type != "Bridge"){
+              PCIDev = createElement(element.object,div);
+              link(bridge.getDiv(),PCIDev.getDiv());
+            }else
+              createBridgeTree(e.object,div);
+          }
+          return div;
+        }
+
+        function link(firstElem,secondElem){
+          const svg = document.getElementById('svg1');
+          const path = SVG.create('path');
+          path.setAttribute("d","M0 0");
+          path.setAttribute("stroke","black");
+          path.setAttribute("fill","none");
+          path.setAttribute("stroke-width","8px");
+          path.id = 'coucu'
+          svg.appendChild(path);
+          console.log($(firstElem),$(secondElem))
+          connect($(path),$(firstElem),$(secondElem));
+        }
+        
+        
+        function createTree(element,parentDiv){
+          
+          if(element !=null && element != undefined){
+
+            let sonElements = [];
+            if(Array.isArray(element)){
+              element.forEach(e =>{
+                if(e.object !=null && e.object != undefined && !Array.isArray(e.object)){
+                  sonElements.push(e.object);
+                }
+                createElement(e,parentDiv);
+                if(Array.isArray(e.object)){
+                  createElements(e.object,parentDiv);
+                }
+              })
+              if(sonElements.length > 0){
+                createElements(sonElements,parentDiv)
+              }
+              createTree(element.object,parentDiv);
+            }else{
+              createElement(element,parentDiv);
+              createTree(element.object,parentDiv);
+            } 
+          }else{
+            return;
+          }
+        }
+
+        function createElement(element,parentDiv){
+          let type = element["@attributes"].type;
+          switch(type){
+
+            case "NUMANode":
+              new NUMANode(element,parentDiv)
+              break;
+
+            case "L3Cache" :
+              new L3Cache(element,parentDiv);
+              break;
+
+            case "L2Cache":
+              new L2Cache(element,parentDiv);
+              break;
+
+            case "L1Cache":
+              new L1Cache(element,parentDiv);
+              break;
+
+            case "L1iCache":
+              new L1Cache(element,parentDiv);
+              break;
+
+            case "Core":
+              const core = new Core(element,parentDiv);
+              if(Array.isArray(element.object)){
+                element.object.forEach(e =>{
+                  new PU(e,core.getDiv());
+                })
+              }
+              else
+                new PU(element.object,core.getDiv());
+              break;
+
+            case "PU":
+              break;
+
+            case "Bridge" :
+              let bridge = new Bridge(element,parentDiv);
+              return bridge;
+
+            case "PCIDev" :
+              const PCIDev = new Pcidev(element,parentDiv);
+              if(Array.isArray(element.object)){
+                element.object.forEach(e =>{
+                  new OSDev(e,PCIDev.getDiv());
+                })
+              }
+              else if(element.object !== null && element.object !== undefined)
+                new OSDev(element.object,PCIDev.getDiv());
+              else{
+                new FalseOSDev(PCIDev.getDiv());
+              }
+              return PCIDev;
+          }
+        }
+
+        function createElements(elements,parentDiv){
+          let sonElements = [];
+          let div = document.createElement('div');
+          div.innerHTML = "<br>"
+          parentDiv.appendChild(div)
+          elements.forEach(e => {
+            if(e.object !=null && e.object != undefined && !Array.isArray(e.object)){
+                  sonElements.push(e.object);
+            }
+            createElement(e,parentDiv,elements);
+            if(Array.isArray(e.object)){
+              createElements(e.object,parentDiv);
+            }
+          })
+          if(sonElements.length > 0){
+            createElements(sonElements,parentDiv);
+          }
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </script>
+  </body>
+ 
+</html>

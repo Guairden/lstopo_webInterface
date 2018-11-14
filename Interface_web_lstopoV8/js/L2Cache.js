@@ -1,9 +1,13 @@
-class L2Cache extends Node{
-    constructor(path,depth){
-        super(path,depth)
-        this.type = "L2Cache";
-        //this.weight = '(' + path["@attributes"]["cache_size"].slice(-0,-3) + 'KB)';
+class L2Cache{
+    constructor(path,parentElement){
+        this.parentElement = parentElement;
+        this.type = path["@attributes"].type;
+        this.path = path;
+        this.weight = '(' + path["@attributes"]["cache_size"].slice(-0,-3) + 'KB)';
+        this.div = this.createElement();
+        this.createInfoPopup()
     }
+
     createElement(){
         const div = document.createElement('div');
         const P = document.createElement('p');
@@ -16,7 +20,7 @@ class L2Cache extends Node{
     }
 
     createInfoPopup(){
-        const modal = document.createElement('div')
+      const modal = document.createElement('div')
         modal.id = "myModal"
         modal.classList.add("modal")
         
@@ -50,10 +54,10 @@ class L2Cache extends Node{
         document.body.appendChild(modal)
 
         this.div.addEventListener('click', function() {
-            modal.style.display = "block";
+          modal.style.display = "block";
         })
-        
-        
+      
+      
         // When the user clicks anywhere outside of the modal, close it
         window.addEventListener('click', function(event) {
             if (event.target == modal) {
