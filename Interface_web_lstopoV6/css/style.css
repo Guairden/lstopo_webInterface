@@ -1,6 +1,7 @@
 body{
     text-align: center;
-    background-color: #b2b7b6;
+    margin: 0px;
+    background-color: white;
     font-family: 'Courier New', Courier, monospace;
 }
 .test{
@@ -8,8 +9,6 @@ body{
 }
 div{
     margin-bottom: 2px;
-    text-align: center;
-    opacity: 0.9;
 }
 
 .Bridge{
@@ -39,7 +38,7 @@ div{
     border-radius: 25px;
 }
 
-.L3Cache,.Cache{
+.L3Cache{
     background-color: #368bbb;
     width: 95%;
     max-height: 10%;
@@ -56,7 +55,7 @@ div{
     border-radius: 25px;
 }
 
-.L1Cache,.L1iCache{
+.L1Cache{
     background-color:#63b3dd;
     width: 15%;
     max-height: 10%;
@@ -74,7 +73,7 @@ div{
     border-radius: 25px;
 }
 
-.PU{
+.Pu{
     background-color: #c4dadd;
     width: 50px;
     min-height: 50px;
@@ -108,4 +107,8 @@ div{
     display: inline-block;
     margin : 10px;
     border-radius: 25px;
+}
+
+.hide{
+    display: none;
 }

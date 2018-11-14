@@ -106,3 +106,9 @@ $(window).resize(function () {
         connect(e.path,e.firstElem,e.secondElem,1);
     })
 });
+
+function reloadSvg(){
+    svgTable.forEach(e => {
+        connect(e.path,e.firstElem,e.secondElem,1);
+    })
+}

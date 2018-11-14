@@ -1,4 +1,4 @@
-class Cache{
+class L1Cache{
     constructor(path,parentElement){
         this.parentElement = parentElement;
         this.type = path["@attributes"].type;
@@ -11,7 +11,7 @@ class Cache{
         const P = document.createElement('p');
         P.innerHTML = this.type + this.weight;
         div.appendChild(P);
-        div.classList.add("Cache");
+        div.classList.add("L1Cache");
         this.parentElement.appendChild(div);
     }
 }

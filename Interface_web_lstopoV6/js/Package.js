@@ -7,5 +7,5 @@ function createPackage(){
     package.classList.add("package");
     document.body.appendChild(package);
 
-    packages.push(package)
+    return package;
 }
